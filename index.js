@@ -26,6 +26,7 @@ async function run() {
     console.log("Connected to MongoDB!");
 
     const userCollection = client.db('BoltPay').collection('user');
+    const transCollection = client.db('BoltPay').collection('transaction');
 
     //JWT RELATED API
     app.post('/jwt', async(req,res) =>{
@@ -48,7 +49,36 @@ async function run() {
         next();
       })
     }
-
+    app.get('/user/admin/:email',verifyToken, async(req,res) =>{
+      const email = req.params.email;
+      if (email !== req.decoded.email ) {
+        return res.status(403).send({message: 'forbiden  access'})
+      }
+      const query = { email: email };
+    const user = await userCollection.findOne(query);
+       
+      res.send(user)
+    })
+    app.post('/users',async(req,res) =>{
+      const user = req.body;
+      const query = {email:user.email}
+      const exitingUser = await userCollection.findOne(query)
+      if(exitingUser){
+        return res.send({message:'user already exists',insertedId:null})
+      }
+      const mobilequery = {mobile:user.mobile}
+      const exitingMobile = await userCollection.findOne(mobilequery)
+      if(exitingMobile){
+        return res.send({message:'Mobile number already exists',insertedId:null})
+      }
+      const nidquery = {nid:user.nid}
+      const exitingNid = await userCollection.findOne(nidquery)
+      if(exitingNid){
+        return res.send({message:'Nid number already exists',insertedId:null})
+      }
+      const result = await userCollection.insertOne(user)
+      return res.send(result)
+    })
     // Example Route - Fetch Users
     app.get('/users', async (req, res) => {
       const users = await userCollection.find().toArray();

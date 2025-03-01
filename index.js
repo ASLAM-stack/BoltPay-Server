@@ -49,19 +49,19 @@ async function run() {
         next();
       })
     }
-    app.get('/user/admin/:email',verifyToken, async(req,res) =>{
+    app.get('/user/admin/:email', verifyToken,async(req,res) =>{
       const email = req.params.email;
       if (email !== req.decoded.email ) {
         return res.status(403).send({message: 'forbiden  access'})
       }
       const query = { email: email };
     const user = await userCollection.findOne(query);
-       
       res.send(user)
     })
     app.post('/users',async(req,res) =>{
       const user = req.body;
-      const query = {email:user.email}
+      const email = user.email.toLowerCase();
+      const query = {email:email}
       const exitingUser = await userCollection.findOne(query)
       if(exitingUser){
         return res.send({message:'user already exists',insertedId:null})
